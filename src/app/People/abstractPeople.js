@@ -38,3 +38,5 @@ class AbstractPeople {
         throw new Error('To be implemented');
     }
 }
+
+module.exports = AbstractPeople

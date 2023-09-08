@@ -15,7 +15,17 @@ const applySwapiEndpoints = (server, app) => {
     });
 
     server.get('/hfswapi/getPeople/:id', async (req, res) => {
-        res.sendStatus(501);
+        const characterId = req.params.id;
+        try{
+            const character = await app.swapiFunctions.getCharacterByID(characterId);
+            if(!character){
+                return res.sendStatus(404);
+            }
+            return res.send(character);
+        }catch(error){
+            console.error(error);
+            res.status(500).send('Internal Server Error'); // Devuelve un código de estado 500 en caso de error.
+        }
     });
 
     server.get('/hfswapi/getPlanet/:id', async (req, res) => {
