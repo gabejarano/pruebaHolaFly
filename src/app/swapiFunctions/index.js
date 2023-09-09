@@ -103,15 +103,7 @@ async function fetchCharacterData(characterId) {
 }
 
 async function createCharacterInstance(characterData, lang) {
-
-    const people = await peopleFactory(characterData.id, lang, characterData);
-
-    if (people) {
-        await people.init(characterData);
-        return people;
-    }
-
-    return null;
+    return await peopleFactory(characterData.id, lang, characterData);
 }
 
 //Function to endpoint
