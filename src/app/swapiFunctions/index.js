@@ -65,7 +65,7 @@ const getPlanetByID = async function (planetId) {
             planetData = planetFromDB;
         } else {
             // Si no se encuentra en la base de datos, consulta la SWAPI.
-            const swapiUrl = `https://swapi.dev/api/planets/${characterId}/`;
+            const swapiUrl = `https://swapi.dev/api/planets/${planetId}/`;
             const swapiResponse = await genericRequest(swapiUrl, 'GET', null);
             if (swapiResponse && swapiResponse.name) {
                 planetData = swapiResponse;
