@@ -44,8 +44,8 @@ const applySwapiEndpoints = (server, app) => {
 
     server.get('/hfswapi/getWeightOnPlanetRandom', async (req, res) => {
         try {
-            const weight = await app.swapiFunctions.getWeightOnPlanetRandom(app.constants.COUNT_PLANETS, app.constants.COUNT_PEOPLE);
-            res.send({weight})
+            const { weight, planetGravity, characterMass } = await app.swapiFunctions.getWeightOnPlanetRandom(app.constants.COUNT_PLANETS, app.constants.COUNT_PEOPLE);
+            res.send({ weight, planetGravity, characterMass })
         } catch (error) {
             console.error(error);
             res.status(500).send('Internal Server Error');

@@ -10,7 +10,19 @@ const getWeightOnPlanet = (mass, gravity) => {
 const parseGravity = function(gravity){
     let options = gravity.split(',');
     let firstGravity = options[0].split(' ');
-    return parseFloat(firstGravity);
+    let gravityValue = parseFloat(firstGravity);
+    if(isNaN(gravityValue)){
+        return 'No se puede calcular la gravedad por falta de datos'
+    }
+    return gravityValue;
+}
+
+const parseMass = function(mass){
+    let massValue = parseFloat(mass)
+    if(isNaN(massValue)){
+        return 'No se puede calcular la masa por falta de datos'
+    }
+    return massValue;
 }
 
 const genericRequest = async (url, method, body, logging = false) => {
@@ -88,16 +100,19 @@ const getPlanetByID = async function (planetId) {
     }
 }
 
-
-
 const getWeightOnPlanetRandom = async function (numberPlanets, numberPeople) {
     try {
         const randomPlanetId = Math.floor(Math.random() * numberPlanets) + 1;
         const randomPeopleId = Math.floor(Math.random() * numberPeople) + 1;
         const planet = await getPlanetByID(randomPlanetId);
         const character = await getCharacterByID(randomPeopleId);
-        let weight = getWeightOnPlanet(parseFloat(character.getMass()), parseGravity(planet.getGravity()))
-        return weight
+        if (character && planet) {
+            let mass = parseMass(character.getMass());
+            let gravity = parseGravity(planet.getGravity());
+            let weight = (typeof gravity === 'string') ? gravity : (typeof mass === 'string') ? mass : getWeightOnPlanet(mass, gravity)
+            return { weight, planetGravity: planet.getGravity(), characterMass: character.getMass() }
+        }
+        return { weight: 'No existen los suficientes datos para calcular el peso' }
     } catch (error) {
         throw error
     }
