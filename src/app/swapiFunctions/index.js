@@ -3,28 +3,7 @@ const { swPeople, swPlanet } = require('../db');
 const CommonPeople = require('../People/commonPeople');
 const { Planet } = require('../Planet');
 
-const getWeightOnPlanet = (mass, gravity) => {
-    return mass * gravity;
-}
-
-const parseGravity = function(gravity){
-    let options = gravity.split(',');
-    let firstGravity = options[0].split(' ');
-    let gravityValue = parseFloat(firstGravity);
-    if(isNaN(gravityValue)){
-        return 'No se puede calcular la gravedad por falta de datos'
-    }
-    return gravityValue;
-}
-
-const parseMass = function(mass){
-    let massValue = parseFloat(mass)
-    if(isNaN(massValue)){
-        return 'No se puede calcular la masa por falta de datos'
-    }
-    return massValue;
-}
-
+//Init functions
 const genericRequest = async (url, method, body, logging = false) => {
     let options = {
         method: method
@@ -40,63 +19,119 @@ const genericRequest = async (url, method, body, logging = false) => {
     return data;
 }
 
+
+
+const getWeightOnPlanet = (mass, gravity) => {
+    return mass * gravity;
+}
+
+
+
+//Functions to getWeightOnPlanetRandom
+const parseGravity = function (gravity) {
+    let options = gravity.split(',');
+    let firstGravity = options[0].split(' ');
+    let gravityValue = parseFloat(firstGravity);
+    if (isNaN(gravityValue)) {
+        return 'No se puede calcular la gravedad por falta de datos'
+    }
+    return gravityValue;
+}
+
+const parseMass = function (mass) {
+    let massValue = parseFloat(mass)
+    if (isNaN(massValue)) {
+        return 'No se puede calcular la masa por falta de datos'
+    }
+    return massValue;
+}
+
+//General function
+async function fetchDataFromSWAPI(url) {
+    const response = await genericRequest(url, 'GET', null);
+    if (response && response.name) {
+        return response;
+    }
+    return null;
+}
+
+
+//Functions to getPlanetByID
+async function fetchPlanetData(planetId) {
+    const planetFromDB = await swPlanet.findOne({ where: { id: planetId } });
+    if (planetFromDB) {
+        return planetFromDB;
+    }
+    const swapiUrl = `https://swapi.dev/api/planets/${planetId}/`;
+    const planetData = await fetchDataFromSWAPI(swapiUrl);
+    return planetData || null;
+}
+
+async function createPlanetInstance(planetData) {
+    const planet = new Planet(planetData.id);
+    planet.init(planetData);
+    return planet;
+}
+
+
+//Functions to getCharacterByID
+async function fetchHomeworldData(homeworldUrl) {
+    const match = homeworldUrl.match(/planets\/(\d+)\/$/);
+    const homeworldData = await fetchDataFromSWAPI(homeworldUrl);
+
+    if (homeworldData) {
+        return {
+            homeworld_name: homeworldData.name,
+            homeworld_id: match[1]
+        };
+    }
+    return null;
+}
+
+async function fetchCharacterData(characterId) {
+    const characterFromDB = await swPeople.findOne({ where: { id: characterId } });
+    if (characterFromDB) {
+        return characterFromDB;
+    }
+    const swapiUrl = `https://swapi.dev/api/people/${characterId}/`;
+    const characterData = await fetchDataFromSWAPI(swapiUrl);
+    if (characterData) {
+        characterData.homeworldData = await fetchHomeworldData(characterData.homeworld);
+        return characterData;
+    }
+    return null;
+}
+
+async function createCharacterInstance(characterData) {
+    const commonPeople = new CommonPeople(characterData.id);
+    await commonPeople.init(characterData);
+    return commonPeople;
+}
+
 const getCharacterByID = async function (characterId) {
     try {
-        let characterData = null;
-        const characterFromDB = await swPeople.findOne({ where: { id: characterId } });
-        if (characterFromDB) {
-            characterData = characterFromDB;
-        } else {
-            // Si no se encuentra en la base de datos, consulta la SWAPI.
-            const swapiUrl = `https://swapi.dev/api/people/${characterId}/`;
-            const swapiResponse = await genericRequest(swapiUrl, 'GET', null);
-            if (swapiResponse && swapiResponse.name) {
-                characterData = swapiResponse;
-                const swapiUrlPlanet = characterData.homeworld;
-                const match = swapiUrlPlanet.match(/planets\/(\d+)\/$/);
-                const swapiResponsePlanet = await genericRequest(swapiUrlPlanet, 'GET', null);
-                if (swapiResponsePlanet && swapiResponsePlanet.name) {
-                    characterData.homeworld_name = swapiResponsePlanet.name;
-                    characterData.homeworld_id = match[1]
-                }
-            }
-        }
+        const characterData = await fetchCharacterData(characterId);
         if (characterData) {
-            // Crea una instancia de CommonPeople y devuelve el personaje.
-
-            const commonPeople = new CommonPeople(characterData.id);
-            await commonPeople.init(characterData);
-            return commonPeople;
+            const character = await createCharacterInstance(characterData);
+            return character;
         }
         return null;
     } catch (error) {
-        throw error; // Maneja los errores si ocurren.
+        throw error;
     }
 }
 
 
 const getPlanetByID = async function (planetId) {
     try {
-        let planetData = null;
-        const planetFromDB = await swPlanet.findOne({ where: { id: planetId } });
-        if (planetFromDB) {
-            planetData = planetFromDB;
-        } else {
-            // Si no se encuentra en la base de datos, consulta la SWAPI.
-            const swapiUrl = `https://swapi.dev/api/planets/${planetId}/`;
-            const swapiResponse = await genericRequest(swapiUrl, 'GET', null);
-            if (swapiResponse && swapiResponse.name) {
-                planetData = swapiResponse;
-            }
-        }
+        const planetData = await fetchPlanetData(planetId);
         if (planetData) {
-            const planet = new Planet();
-            await planet.init(planetData);
+            const planet = await createPlanetInstance(planetData);
             return planet;
         }
         return null;
     } catch (error) {
-        throw error; // Maneja los errores si ocurren.
+        throw error;
     }
 }
 
@@ -108,19 +143,19 @@ const getWeightOnPlanetRandom = async function (numberPlanets, numberPeople) {
         const character = await getCharacterByID(randomPeopleId);
         if (!character || !planet) {
             const error = new Error('No existen suficientes datos para calcular el peso');
-            error.code = 400; 
+            error.code = 400;
             throw error;
         }
         if (character.getHomeworlId == randomPlanetId) {
             const error = Error('El planeta a consultar es el planeta natal del personaje');
-            error.code = 400; 
+            error.code = 400;
             throw error;
         }
         let mass = parseMass(character.getMass());
         let gravity = parseGravity(planet.getGravity());
         if ((typeof gravity === 'string') || (typeof mass === 'string')) {
             const error = new Error('No existe informacion suficiente de gravedad o masa para realizar el calculo');
-            error.code = 400; 
+            error.code = 400;
             throw error;
         }
         weight = getWeightOnPlanet(mass, gravity)

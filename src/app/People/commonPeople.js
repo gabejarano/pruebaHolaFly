@@ -10,8 +10,8 @@ class CommonPeople extends AbstractPeople {
         this.name = characterData.name;
         this.mass = characterData.mass;
         this.height = characterData.height;
-        this.homeworldName = characterData.homeworld_name;
-        this.homeworldId = characterData.homeworld_id;
+        this.homeworldName = characterData.homeworldData.homeworld_name;
+        this.homeworldId = characterData.homeworldData.homeworld_id;
     }
 }
 
