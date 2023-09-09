@@ -106,13 +106,25 @@ const getWeightOnPlanetRandom = async function (numberPlanets, numberPeople) {
         const randomPeopleId = Math.floor(Math.random() * numberPeople) + 1;
         const planet = await getPlanetByID(randomPlanetId);
         const character = await getCharacterByID(randomPeopleId);
-        if (character && planet) {
-            let mass = parseMass(character.getMass());
-            let gravity = parseGravity(planet.getGravity());
-            let weight = (typeof gravity === 'string') ? gravity : (typeof mass === 'string') ? mass : getWeightOnPlanet(mass, gravity)
-            return { weight, planetGravity: planet.getGravity(), characterMass: character.getMass() }
+        if (!character || !planet) {
+            const error = new Error('No existen suficientes datos para calcular el peso');
+            error.code = 400; 
+            throw error;
         }
-        return { weight: 'No existen los suficientes datos para calcular el peso' }
+        if (character.getHomeworlId == randomPlanetId) {
+            const error = Error('El planeta a consultar es el planeta natal del personaje');
+            error.code = 400; 
+            throw error;
+        }
+        let mass = parseMass(character.getMass());
+        let gravity = parseGravity(planet.getGravity());
+        if ((typeof gravity === 'string') || (typeof mass === 'string')) {
+            const error = new Error('No existe informacion suficiente de gravedad o masa para realizar el calculo');
+            error.code = 400; 
+            throw error;
+        }
+        weight = getWeightOnPlanet(mass, gravity)
+        return { weight, planetGravity: planet.getGravity(), characterMass: character.getMass() }
     } catch (error) {
         throw error
     }

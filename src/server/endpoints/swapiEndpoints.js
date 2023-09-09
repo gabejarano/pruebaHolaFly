@@ -23,7 +23,6 @@ const applySwapiEndpoints = (server, app) => {
             }
             return res.send(character);
         } catch (error) {
-            console.error(error);
             res.status(500).send('Internal Server Error'); // Devuelve un código de estado 500 en caso de error.
         }
     });
@@ -37,7 +36,6 @@ const applySwapiEndpoints = (server, app) => {
             }
             return res.send(planet);
         } catch (error) {
-            console.error(error);
             res.status(500).send('Internal Server Error'); // Devuelve un código de estado 500 en caso de error.
         }
     });
@@ -47,7 +45,9 @@ const applySwapiEndpoints = (server, app) => {
             const { weight, planetGravity, characterMass } = await app.swapiFunctions.getWeightOnPlanetRandom(app.constants.COUNT_PLANETS, app.constants.COUNT_PEOPLE);
             res.send({ weight, planetGravity, characterMass })
         } catch (error) {
-            console.error(error);
+            if(error.code==400){
+                return res.status(error.code).json({ error: error.message });
+            }
             res.status(500).send('Internal Server Error');
         }
     });
