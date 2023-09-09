@@ -21,30 +21,7 @@ const genericRequest = async (url, method, body, logging = false) => {
 
 
 
-const getWeightOnPlanet = (mass, gravity) => {
-    return mass * gravity;
-}
 
-
-
-//Functions to getWeightOnPlanetRandom
-const parseGravity = function (gravity) {
-    let options = gravity.split(',');
-    let firstGravity = options[0].split(' ');
-    let gravityValue = parseFloat(firstGravity);
-    if (isNaN(gravityValue)) {
-        return 'No se puede calcular la gravedad por falta de datos'
-    }
-    return gravityValue;
-}
-
-const parseMass = function (mass) {
-    let massValue = parseFloat(mass)
-    if (isNaN(massValue)) {
-        return 'No se puede calcular la masa por falta de datos'
-    }
-    return massValue;
-}
 
 //General function
 async function fetchDataFromSWAPI(url) {
@@ -147,27 +124,13 @@ const getWeightOnPlanetRandom = async function (numberPlanets, numberPeople) {
             error.code = 400;
             throw error;
         }
-        if (character.getHomeworlId == randomPlanetId) {
-            const error = Error('El planeta a consultar es el planeta natal del personaje');
-            error.code = 400;
-            throw error;
-        }
-        let mass = parseMass(character.getMass());
-        let gravity = parseGravity(planet.getGravity());
-        if ((typeof gravity === 'string') || (typeof mass === 'string')) {
-            const error = new Error('No existe informacion suficiente de gravedad o masa para realizar el calculo');
-            error.code = 400;
-            throw error;
-        }
-        weight = getWeightOnPlanet(mass, gravity)
-        return { weight, planetGravity: planet.getGravity(), characterMass: character.getMass() }
+        return character.getWeightOnPlanet(planet);
     } catch (error) {
         throw error
     }
 }
 
 module.exports = {
-    getWeightOnPlanet,
     genericRequest,
     getCharacterByID,
     getPlanetByID,
