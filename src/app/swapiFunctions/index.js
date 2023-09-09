@@ -7,6 +7,12 @@ const getWeightOnPlanet = (mass, gravity) => {
     return mass * gravity;
 }
 
+const parseGravity = function(gravity){
+    let options = gravity.split(',');
+    let firstGravity = options[0].split(' ');
+    return parseFloat(firstGravity);
+}
+
 const genericRequest = async (url, method, body, logging = false) => {
     let options = {
         method: method
@@ -83,18 +89,15 @@ const getPlanetByID = async function (planetId) {
 }
 
 
+
 const getWeightOnPlanetRandom = async function (numberPlanets, numberPeople) {
     try {
         const randomPlanetId = Math.floor(Math.random() * numberPlanets) + 1;
         const randomPeopleId = Math.floor(Math.random() * numberPeople) + 1;
-
         const planet = await getPlanetByID(randomPlanetId);
         const character = await getCharacterByID(randomPeopleId);
-
-        let weight = getWeightOnPlanet(character.getMass, planet.getGravity)
-
+        let weight = getWeightOnPlanet(parseFloat(character.getMass()), parseGravity(planet.getGravity()))
         return weight
-
     } catch (error) {
         throw error
     }
