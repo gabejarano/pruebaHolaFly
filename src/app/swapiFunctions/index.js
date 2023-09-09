@@ -1,6 +1,7 @@
 const fetch = require('node-fetch');
-const { swPeople } = require('../db');
-const CommonPeople = require('../People/commonPeople')
+const { swPeople, swPlanet } = require('../db');
+const CommonPeople = require('../People/commonPeople');
+const { Planet } = require('../Planet');
 
 const getWeightOnPlanet = (mass, gravity) => {
     return mass * gravity;
@@ -55,8 +56,35 @@ const getCharacterByID = async function (characterId) {
     }
 }
 
+
+const getPlanetByID = async function (planetId) {
+    try {
+        let planetData = null;
+        const planetFromDB = await swPlanet.findOne({ where: { id: planetId } });
+        if (planetFromDB) {
+            planetData = planetFromDB;
+        } else {
+            // Si no se encuentra en la base de datos, consulta la SWAPI.
+            const swapiUrl = `https://swapi.dev/api/planets/${characterId}/`;
+            const swapiResponse = await genericRequest(swapiUrl, 'GET', null);
+            if (swapiResponse && swapiResponse.name) {
+                planetData = swapiResponse;
+            }
+        }
+        if (planetData) {
+            const planet = new Planet(planetData.id);
+            await planet.init(planetData);
+            return planet;
+        }
+        return null;
+    } catch (error) {
+        throw error; // Maneja los errores si ocurren.
+    }
+}
+
 module.exports = {
     getWeightOnPlanet,
     genericRequest,
-    getCharacterByID
+    getCharacterByID,
+    getPlanetByID
 }
