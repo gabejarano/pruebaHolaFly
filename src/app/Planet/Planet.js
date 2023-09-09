@@ -1,6 +1,5 @@
 class Planet {
-    constructor(id) {
-        this.id = id;
+    constructor() {
     }
 
     async init(planetData) {

@@ -45,7 +45,7 @@ const getCharacterByID = async function (characterId) {
         }
         if (characterData) {
             // Crea una instancia de CommonPeople y devuelve el personaje.
-            
+
             const commonPeople = new CommonPeople(characterData.id);
             await commonPeople.init(characterData);
             return commonPeople;
@@ -72,7 +72,7 @@ const getPlanetByID = async function (planetId) {
             }
         }
         if (planetData) {
-            const planet = new Planet(planetData.id);
+            const planet = new Planet();
             await planet.init(planetData);
             return planet;
         }
@@ -82,9 +82,28 @@ const getPlanetByID = async function (planetId) {
     }
 }
 
+
+const getWeightOnPlanetRandom = async function (numberPlanets, numberPeople) {
+    try {
+        const randomPlanetId = Math.floor(Math.random() * numberPlanets) + 1;
+        const randomPeopleId = Math.floor(Math.random() * numberPeople) + 1;
+
+        const planet = await getPlanetByID(randomPlanetId);
+        const character = await getCharacterByID(randomPeopleId);
+
+        let weight = getWeightOnPlanet(character.getMass, planet.getGravity)
+
+        return weight
+
+    } catch (error) {
+        throw error
+    }
+}
+
 module.exports = {
     getWeightOnPlanet,
     genericRequest,
     getCharacterByID,
-    getPlanetByID
+    getPlanetByID,
+    getWeightOnPlanetRandom
 }
