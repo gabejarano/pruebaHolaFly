@@ -24,10 +24,7 @@ const genericRequest = async (url, method, body, logging = false) => {
 const getCharacterByID = async function (characterId) {
     try {
         let characterData = null;
-        let people = await swPeople.findAll();
-        console.log(people)
         const characterFromDB = await swPeople.findOne({ where: { id: characterId } });
-        console.log(characterFromDB)
         if (characterFromDB) {
             characterData = characterFromDB;
         } else {
@@ -36,10 +33,18 @@ const getCharacterByID = async function (characterId) {
             const swapiResponse = await genericRequest(swapiUrl, 'GET', null);
             if (swapiResponse && swapiResponse.name) {
                 characterData = swapiResponse;
+                const swapiUrlPlanet = characterData.homeworld;
+                const match = swapiUrlPlanet.match(/planets\/(\d+)\/$/);
+                const swapiResponsePlanet = await genericRequest(swapiUrlPlanet, 'GET', null);
+                if (swapiResponsePlanet && swapiResponsePlanet.name) {
+                    characterData.homeworld_name = swapiResponsePlanet.name;
+                    characterData.homeworld_id = match[1]
+                }
             }
         }
         if (characterData) {
             // Crea una instancia de CommonPeople y devuelve el personaje.
+            
             const commonPeople = new CommonPeople(characterData.id);
             await commonPeople.init(characterData);
             return commonPeople;
