@@ -13,6 +13,8 @@ class CommonPeople extends AbstractPeople {
         this.homeworldName = characterData.homeworld_name || characterData.homeworldData.homeworld_name ;
         this.homeworldId = characterData.homeworld_id || characterData.homeworldData.homeworld_id;
     }
+
+    
 }
 
 

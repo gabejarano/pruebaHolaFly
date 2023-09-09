@@ -17,7 +17,7 @@ const applySwapiEndpoints = (server, app) => {
     server.get('/hfswapi/getPeople/:id', async (req, res) => {
         const characterId = req.params.id;
         try {
-            const character = await app.swapiFunctions.getCharacterByID(characterId);
+            const character = await app.swapiFunctions.getCharacterByID(characterId, _isWookieeFormat(req));
             if (!character) {
                 return res.sendStatus(404);
             }

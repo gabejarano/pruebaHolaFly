@@ -49,7 +49,7 @@ const parseMass = function (mass) {
 //General function
 async function fetchDataFromSWAPI(url) {
     const response = await genericRequest(url, 'GET', null);
-    if (response && response.name) {
+    if (response && response.name || response.whrascwo) {
         return response;
     }
     return null;
@@ -75,28 +75,29 @@ async function createPlanetInstance(planetData) {
 
 
 //Functions to getCharacterByID
-async function fetchHomeworldData(homeworldUrl) {
-    const match = homeworldUrl.match(/planets\/(\d+)\/$/);
+async function fetchHomeworldData(homeworldUrl, isWookieeFormat) {
+    const match = homeworldUrl.match(!isWookieeFormat ? /planets\/(\d+)\/$/ : /akanrawhwoaoc\/(\d+)\/$/) 
+    homeworldUrl = !isWookieeFormat ? homeworldUrl : `https://swapi.dev/api/planets/${match[1]}?format=wookiee`
     const homeworldData = await fetchDataFromSWAPI(homeworldUrl);
-
     if (homeworldData) {
         return {
-            homeworld_name: homeworldData.name,
+            homeworld_name: !isWookieeFormat? homeworldData.name: homeworldData.whrascwo,
             homeworld_id: match[1]
         };
     }
     return null;
 }
 
-async function fetchCharacterData(characterId) {
+async function fetchCharacterData(characterId, isWookieeFormat) {
     const characterFromDB = await swPeople.findOne({ where: { id: characterId } });
     if (characterFromDB) {
         return characterFromDB;
     }
-    const swapiUrl = `https://swapi.dev/api/people/${characterId}/`;
+    const swapiUrl = `https://swapi.dev/api/people/${characterId}?${isWookieeFormat?'format=wookiee':''}`;
     const characterData = await fetchDataFromSWAPI(swapiUrl);
     if (characterData) {
-        characterData.homeworldData = await fetchHomeworldData(characterData.homeworld);
+        let urlHomeWorld = isWookieeFormat? characterData.acooscwoohoorcanwa : characterData.homeworld
+        characterData.homeworldData = await fetchHomeworldData(urlHomeWorld, isWookieeFormat);
         return characterData;
     }
     return null;
@@ -107,11 +108,11 @@ async function createCharacterInstance(characterData, lang) {
 }
 
 //Function to endpoint
-const getCharacterByID = async function (characterId) {
+const getCharacterByID = async function (characterId, isWookieeFormat) {
     try {
-        const characterData = await fetchCharacterData(characterId);
+        const characterData = await fetchCharacterData(characterId, isWookieeFormat);
         if (characterData) {
-            const character = await createCharacterInstance(characterData, '');
+            const character = await createCharacterInstance(characterData, isWookieeFormat ? 'wookiee' : '');
             return character;
         }
         return null;
