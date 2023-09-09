@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 const { swPeople, swPlanet } = require('../db');
-const CommonPeople = require('../People/commonPeople');
 const { Planet } = require('../Planet');
+const { peopleFactory } = require('../People')
 
 //Init functions
 const genericRequest = async (url, method, body, logging = false) => {
@@ -102,17 +102,24 @@ async function fetchCharacterData(characterId) {
     return null;
 }
 
-async function createCharacterInstance(characterData) {
-    const commonPeople = new CommonPeople(characterData.id);
-    await commonPeople.init(characterData);
-    return commonPeople;
+async function createCharacterInstance(characterData, lang) {
+
+    const people = await peopleFactory(characterData.id, lang, characterData);
+
+    if (people) {
+        await people.init(characterData);
+        return people;
+    }
+
+    return null;
 }
 
+//Function to endpoint
 const getCharacterByID = async function (characterId) {
     try {
         const characterData = await fetchCharacterData(characterId);
         if (characterData) {
-            const character = await createCharacterInstance(characterData);
+            const character = await createCharacterInstance(characterData, '');
             return character;
         }
         return null;
@@ -121,7 +128,7 @@ const getCharacterByID = async function (characterId) {
     }
 }
 
-
+//Function to endpoint
 const getPlanetByID = async function (planetId) {
     try {
         const planetData = await fetchPlanetData(planetId);
@@ -135,6 +142,7 @@ const getPlanetByID = async function (planetId) {
     }
 }
 
+//Function to endpoint
 const getWeightOnPlanetRandom = async function (numberPlanets, numberPeople) {
     try {
         const randomPlanetId = Math.floor(Math.random() * numberPlanets) + 1;

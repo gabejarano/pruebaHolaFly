@@ -23,6 +23,7 @@ const applySwapiEndpoints = (server, app) => {
             }
             return res.send(character);
         } catch (error) {
+            console.log(error)
             res.status(500).send('Internal Server Error'); // Devuelve un código de estado 500 en caso de error.
         }
     });
